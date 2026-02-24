@@ -10,19 +10,49 @@ st.set_page_config(page_title="Vanguard Fortress Portfolio Builder", layout="wid
 
 # --- Define Data ---
 VANGUARD_ETFS = {
+    # Broad Market
     "VTI": "Total Stock Market",
     "VOO": "S&P 500",
+    "VT": "Total World Stock",
+    "MGC": "Mega Cap",
+    
+    # Size & Style
     "VTV": "Value ETF",
     "VUG": "Growth ETF",
+    "VIG": "Dividend Appreciation",
+    "VYM": "High Dividend Yield",
+    "VB": "Small-Cap",
+    "VO": "Mid-Cap",
+    "VBR": "Small-Cap Value",
+    "VBK": "Small-Cap Growth",
+    
+    # Sector
+    "VNQ": "Real Estate (REIT)",
+    "VGT": "Information Technology",
+    "VHT": "Health Care",
+    "VPU": "Utilities",
+    "VDC": "Consumer Staples",
+    "VDE": "Energy",
+    "VFH": "Financials",
+    "VIS": "Industrials",
+    "VAW": "Materials",
+    "VOX": "Comm. Services",
+    "VCR": "Consumer Discretionary",
+    
+    # International
+    "VXUS": "Total International Stock",
+    "VWO": "Emerging Markets",
+    "VEA": "Developed Markets",
+    "VEU": "All-World ex-US",
+    
+    # Bonds
     "BND": "Total Bond Market",
     "BSV": "Short-Term Bond",
     "VGLT": "Long-Term Treasury",
-    "VNQ": "Real Estate (REIT)",
-    "VPU": "Utilities",
-    "VHT": "Health Care",
-    "VDC": "Consumer Staples",
-    "VXUS": "Total International Stock",
-    "BNDX": "Total International Bond"
+    "VGIT": "Intermediate-Term Treasury",
+    "SHV": "Short Treasury",
+    "BNDX": "Total International Bond",
+    "VWOB": "Emerging Markets Bond"
 }
 
 # --- Sidebar (Configuration) ---
@@ -185,6 +215,34 @@ if run_btn:
                         return f'background-color: {color}; color: black'
 
                     st.dataframe(annual_df.style.format("{:.2%}").applymap(color_negative_red), use_container_width=True)
+
+                    # --- Save to Text File ---
+                    output_file = "latest_portfolio_analysis.txt"
+                    with open(output_file, "a") as f:
+                        f.write(f"\n" + "="*40 + "\n")
+                        f.write(f"Vanguard Fortress Portfolio Analysis\n")
+                        f.write(f"Date: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n")
+                        f.write("="*40 + "\n\n")
+                        
+                        f.write(f"Metrics:\n")
+                        f.write(f"  Annual Return (CAGR): {best['CAGR']:.2%}\n")
+                        f.write(f"  Max Drawdown:         {best['MaxDD']:.2%}\n")
+                        f.write(f"  Negative Years:       {best['PctNegYears']:.1%}\n")
+                        f.write(f"  Sharpe Ratio:         {best['Sharpe']:.2f}\n\n")
+                        
+                        f.write("Portfolio Allocation:\n")
+                        for ticker, weight in alloc.items():
+                            name = VANGUARD_ETFS.get(ticker, ticker)
+                            f.write(f"  {ticker:<5} ({name}): {weight:.1%}\n")
+                        f.write("\n")
+                        
+                        f.write("Annual Returns History:\n")
+                        for year, row in annual_df.iterrows():
+                            f.write(f"  {year}: {row['Return']:.2%}\n")
+                        f.write("\n")
+                            
+                    st.success(f"✅ Analysis appended to {output_file}")
+
 
         except Exception as e:
             st.error(f"Analysis Error: {e}")
