@@ -5,6 +5,8 @@ import numpy as np
 import itertools
 from datetime import datetime
 
+import os
+
 # --- Page Config (Must be first) ---
 st.set_page_config(page_title="Vanguard Fortress Portfolio Builder", layout="wide")
 
@@ -81,6 +83,24 @@ st.markdown("""
 This tool analyzes historical data for Vanguard ETFs to find portfolio combinations 
 that maximize returns while minimizing drawdowns and negative years.
 """)
+
+# --- Download Results Button ---
+output_file = "latest_portfolio_analysis.txt"
+if os.path.exists(output_file):
+    with open(output_file, "rb") as f:
+        file_contents = f.read()
+    
+    col_dl, col_view = st.columns([1, 4])
+    with col_dl:
+        st.download_button(
+            label="📥 Download Analysis Log",
+            data=file_contents,
+            file_name="vanguard_portfolio_analysis.txt",
+            mime="text/plain"
+        )
+    with col_view:
+        with st.expander("📄 View Analysis Log File"):
+            st.text(file_contents.decode("utf-8"))
 
 if run_btn:
     if not selected_tickers:
