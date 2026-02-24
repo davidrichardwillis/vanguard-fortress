@@ -131,6 +131,12 @@ if run_btn:
                 annual_data = data.resample('YE').last().ffill()
                 annual_returns = annual_data.pct_change().dropna()
                 
+                # Identify date constraints (new feature)
+                first_valid_indices = data.apply(lambda x: x.first_valid_index())
+                latest_start_date = first_valid_indices.max()
+                limiting_assets = first_valid_indices[first_valid_indices == latest_start_date].index.tolist()
+                limiting_assets_str = ", ".join(limiting_assets)
+                
                 status_text.info(f"Analyzing {len(selected_tickers)} assets...")
                 
                 # Simulation Parameters
@@ -218,6 +224,7 @@ if run_btn:
                     col_chart, col_list = st.columns([2, 1])
                     with col_chart:
                         st.bar_chart(pd.Series(alloc))
+                        st.caption(f"⚠️ History limited by **{limiting_assets_str}** (Started: {latest_start_date.strftime('%Y-%m-%d')})")
                     with col_list:
                         st.markdown("### Assets Included:")
                         for ticker, weight in alloc.items():
