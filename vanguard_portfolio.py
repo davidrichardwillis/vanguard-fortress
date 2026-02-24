@@ -58,18 +58,28 @@ if run_btn:
         status_text.info("Fetching market data...")
         
         try:
-            # Fetch Data - Force single-level columns if possible
-            # yfinance returns MultiIndex if multiple tickers
-            data = yf.download(selected_tickers, start=f"{start_year}-01-01", end=f"{end_year}-12-31", progress=False)['Adj Close']
+            # Fetch Data
+            # auto_adjust=True makes it return just Close, Open, etc. adjusted.
+            # We just want the 'Close' price which is adjusted by default in new yfinance
+            df = yf.download(selected_tickers, start=f"{start_year}-01-01", end=f"{end_year}-12-31", progress=False)
+            
+            # Extract Adjusted Close
+            # Handle different yfinance return structures
+            if 'Adj Close' in df.columns:
+                data = df['Adj Close']
+            elif 'Close' in df.columns:
+                data = df['Close']
+            else:
+                # If single ticker and flat, it might just be the dataframe itself
+                data = df
             
             # Check if empty
             if data.empty:
                 st.error("No data found for the selected tickers/dates.")
             else:
-                # Handle single vs multi-index
-                # If only one ticker is selected, it's a Series, otherwise DataFrame
+                # Ensure it's a DataFrame (if single ticker Series)
                 if isinstance(data, pd.Series):
-                    data = data.to_frame()
+                    data = data.to_frame(name=selected_tickers[0])
                 
                 # Resample to Annual
                 # Using 'YE' for Year End (pandas 2.2+ compliant)
@@ -148,7 +158,6 @@ if run_btn:
                     
                     # --- NEW: Annual Returns Table ---
                     st.subheader("📅 Annual Performance History")
-                    st.markdown("Returns for the optimal portfolio strategy:")
                     
                     # Re-calculate the returns series for the best portfolio
                     best_weights = best['RawWeights']
@@ -156,21 +165,12 @@ if run_btn:
                     
                     # Create a clean DataFrame for display
                     annual_df = best_annual_series.to_frame(name="Annual Return")
-                    annual_df.index = annual_df.index.year
+                    annual_df.index = annual_df.index.year.astype(str) # Convert year to string for cleaner display
                     annual_df = annual_df.sort_index(ascending=False)
                     
-                    # Color formatting for positive/negative years
-                    def color_negative_red(val):
-                        color = 'red' if val < 0 else 'green'
-                        return f'color: {color}'
-
-                    c_table, c_chart = st.columns([1, 2])
-                    
-                    with c_table:
-                        st.dataframe(annual_df.style.format("{:.2%}").applymap(color_negative_red))
-                    
-                    with c_chart:
-                        st.bar_chart(annual_df)
+                    # Add numeric coloring
+                    st.bar_chart(annual_df)
+                    st.dataframe(annual_df.style.format("{:.2%}"), use_container_width=True)
 
                     with st.expander("See Top 10 Alternative Portfolios"):
                         st.dataframe(df.head(10)[["CAGR", "Sharpe", "MaxDD", "PctNegYears"]].style.format("{:.2%}"))
