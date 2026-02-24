@@ -134,7 +134,8 @@ if run_btn:
                 status_text.info(f"Analyzing {len(selected_tickers)} assets...")
                 
                 # Simulation Parameters
-                num_simulations = 5000 if allow_sparse else 2000
+                # INCREASED to 50,000 for better accuracy/consistency
+                num_simulations = 50000 
                 results = []
                 
                 progress_bar = st.progress(0)
@@ -166,7 +167,7 @@ if run_btn:
                 for i in range(num_simulations):
                     weights = all_weights[i]
                     
-                    if i % 200 == 0:
+                    if i % 1000 == 0:  # Update progress less frequently to save time
                         progress_bar.progress(i / num_simulations)
 
                     # Calculate Portfolio Annual Returns
